@@ -14,7 +14,8 @@
     "close-inactive": "tsx scripts/close-inactive-conversations.ts",
     "escalate-sla": "tsx scripts/escalate-sla.ts",
     "crawl-products": "tsx scripts/crawl-products.ts",
-    "worker-instagram": "tsx scripts/worker-instagram.ts"
+    "worker-instagram": "tsx scripts/worker-instagram.ts",
+    "seed-sectors": "tsx scripts/seed-sectors.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.18.0",
