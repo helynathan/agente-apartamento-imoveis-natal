@@ -14,8 +14,8 @@ instância isolada deste cliente:
 
 1. Importar os 3 arquivos JSON no n8n (**Workflows → Import from File**).
 2. Em cada um, preencher as credenciais indicadas na sticky note do próprio workflow
-   (Instagram: HTTP Header Auth com `Authorization: Bearer TOKEN`; RD Station: variável de
-   ambiente `RD_CRM_TOKEN` no n8n, não credencial).
+   (Instagram: HTTP Header Auth com `Authorization: Bearer TOKEN`; RD Station: credencial
+   Query Auth — nome do parâmetro `token`, valor o token da API do RD Station CRM).
 3. Preencher `igUserId`/`graphApiVersion` no node "Config" de `webhook-in-instagram` e de
    `instagram-send` — mesmo valor nos dois (obtido em
    `graph.instagram.com/me/conversations?fields=participants`, não em `/me` nem `entry.id`
@@ -39,3 +39,13 @@ buscando, entre as conversas retornadas, a que realmente contém quem mandou a m
 ## Token de longa duração do Instagram
 
 Expira em ~60 dias e não renova sozinho — trava manual conhecida. Reveja periodicamente.
+
+## Decisão: DM de abertura por comentário não passa pelo painel (2026-09-08)
+
+O branch de comentário (`Parse Evento Comentario` → `Responder Comentario Publicamente` →
+`Enviar DM Privada do Comentario`) manda a mensagem de abertura direto pela Graph API, sem
+repassar pro Next.js — ela não fica registrada no histórico da conversa nem visível no painel.
+Isso foi identificado na revisão final como uma exceção à regra de "toda mensagem passa pelo
+Next.js", mas decisão explícita do usuário: não é necessário resolver isso agora. Se algum dia
+importar ter esse histórico completo no painel, o ajuste é fazer esse branch também chamar o
+mesmo endpoint que `webhook-in-instagram` usa pra mensagens normais, antes de responder.
