@@ -1,7 +1,7 @@
-node_modules/
-dist/
-.env
-data/
-*.log
-.DS_Store
 .worktrees/
+node_modules/
+.next/
+.env
+*.log
+next-env.d.ts
+tsconfig.tsbuildinfo

@@ -1,0 +1,43 @@
+{
+  "name": "whattsatendebless",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "vitest run",
+    "worker": "tsx scripts/worker.ts",
+    "create-admin": "tsx scripts/create-admin.ts",
+    "realtime": "tsx scripts/realtime.ts",
+    "close-inactive": "tsx scripts/close-inactive-conversations.ts",
+    "escalate-sla": "tsx scripts/escalate-sla.ts",
+    "crawl-products": "tsx scripts/crawl-products.ts",
+    "worker-instagram": "tsx scripts/worker-instagram.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.18.0",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "next": "^14.2.0",
+    "next-auth": "^4.24.7",
+    "openai": "^4.63.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20.14.0",
+    "@types/react": "^18.3.0",
+    "@types/ws": "^8.5.12",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.41",
+    "prisma": "^5.18.0",
+    "tailwindcss": "^3.4.10",
+    "tsx": "^4.16.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
+  }
+}

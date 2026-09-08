@@ -1,0 +1,10 @@
+node_modules
+.next
+.git
+.worktrees
+.env*
+!.env.example
+*.log
+.superpowers
+docs
+tsconfig.tsbuildinfo

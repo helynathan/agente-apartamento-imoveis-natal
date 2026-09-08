@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Conversation" ADD COLUMN "aiMessageCount" INTEGER NOT NULL DEFAULT 0,
+ALTER COLUMN "status" SET DEFAULT 'AI_HANDLING';
