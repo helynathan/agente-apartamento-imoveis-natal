@@ -1,0 +1,77 @@
+{
+  "name": "Apartamento Imoveis Natal - Instagram Send",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Setup antes de ativar\n\n1. Preencha `igUserId`/`graphApiVersion` no node \"Config\" (mesmos valores do workflow webhook-in-instagram).\n2. Credencial Instagram (HTTP Header Auth) no node \"Enviar Mensagem Instagram\".\n3. No `.env` do Next.js, `N8N_INSTAGRAM_SEND_WEBHOOK_URL` deve apontar pra Production URL do node \"Webhook\" abaixo.",
+        "height": 260,
+        "width": 400
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-880, -300],
+      "id": "sticky-setup",
+      "name": "Instruções de Setup"
+    },
+    {
+      "parameters": { "httpMethod": "POST", "path": "apartamentoimoveis-instagram-send", "responseMode": "responseNode", "options": {} },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-880, 0],
+      "id": "webhook",
+      "name": "Webhook",
+      "webhookId": "apartamentoimoveis-instagram-send"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "cfg-ig-user-id", "name": "igUserId", "value": "17841409145832360", "type": "string" },
+            { "id": "cfg-graph-version", "name": "graphApiVersion", "value": "v25.0", "type": "string" }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-640, 0],
+      "id": "config",
+      "name": "Config"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://graph.instagram.com/' + $json.graphApiVersion + '/' + $json.igUserId + '/messages' }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { recipient: { id: $json.body.externalId }, message: { text: $json.body.content } } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-400, 0],
+      "id": "send-message",
+      "name": "Enviar Mensagem Instagram",
+      "credentials": { "httpHeaderAuth": { "id": "REPLACE_ME", "name": "Instagram Graph API" } }
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ { id: $json.message_id } }}", "options": {} },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [-160, 0],
+      "id": "respond",
+      "name": "Responder"
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{ "node": "Config", "type": "main", "index": 0 }]] },
+    "Config": { "main": [[{ "node": "Enviar Mensagem Instagram", "type": "main", "index": 0 }]] },
+    "Enviar Mensagem Instagram": { "main": [[{ "node": "Responder", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}
