@@ -1,10 +1,12 @@
 services:
   postgres:
+    # Precisa ser a imagem com pgvector (não `postgres:16` puro) — o schema usa a extensão
+    # `vector` para embeddings de produtos (prisma/schema.prisma: extensions = [vector]).
     image: pgvector/pgvector:pg16
     environment:
-      POSTGRES_USER: whattsatende
-      POSTGRES_PASSWORD: whattsatende
-      POSTGRES_DB: whattsatende
+      POSTGRES_USER: apartamentoimoveisnatal
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB: apartamentoimoveisnatal
     ports:
       - "5432:5432"
     volumes:
