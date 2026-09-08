@@ -1,0 +1,144 @@
+{
+  "name": "Apartamento Imoveis Natal - Lead to RD Station",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Setup antes de ativar\n\n1. Variável de ambiente do n8n: `RD_CRM_TOKEN` (token da API do RD Station CRM).\n2. No `.env` do Next.js, `N8N_LEAD_WEBHOOK_URL` deve apontar pra Production URL do node \"Webhook\" abaixo.",
+        "height": 220,
+        "width": 400
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-1120, -280],
+      "id": "sticky-setup",
+      "name": "Instruções de Setup"
+    },
+    {
+      "parameters": { "httpMethod": "POST", "path": "apartamentoimoveis-lead-rdstation", "responseMode": "responseNode", "options": {} },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-1120, 0],
+      "id": "webhook",
+      "name": "Webhook",
+      "webhookId": "apartamentoimoveis-lead-rdstation"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://crm.rdstation.com/api/v1/contacts?token=' + $env.RD_CRM_TOKEN + '&phone=' + encodeURIComponent($json.body.telefone) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-880, 0],
+      "id": "rd-search",
+      "name": "Buscar Contato RD Station"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "conditions": [ { "id": "cond-exists", "leftValue": "={{ ($json.contacts && $json.contacts.length > 0) }}", "rightValue": true, "operator": { "type": "boolean", "operation": "equals" } } ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [-640, 0],
+      "id": "rd-if-exists",
+      "name": "Contato já existe?"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ 'https://crm.rdstation.com/api/v1/contacts/' + $json.contacts[0]._id + '?token=' + $env.RD_CRM_TOKEN }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { contact: { name: $('Webhook').item.json.body.nome, phones: [{ phone: $('Webhook').item.json.body.telefone, type: 'cellphone' }] } } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-400, -120],
+      "id": "rd-update",
+      "name": "Atualizar Contato RD Station"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://crm.rdstation.com/api/v1/contacts?token=' + $env.RD_CRM_TOKEN }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { contact: { name: $('Webhook').item.json.body.nome, phones: [{ phone: $('Webhook').item.json.body.telefone, type: 'cellphone' }] } } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-400, 120],
+      "id": "rd-create",
+      "name": "Criar Contato RD Station"
+    },
+    {
+      "parameters": {
+        "jsCode": "const historico = $('Webhook').item.json.body.historico || [];\nconst resumo = historico.map((m) => (m.direction === 'INBOUND' ? 'Cliente: ' : 'Atendimento: ') + m.content).join('\\n');\nconst link = $('Webhook').item.json.body.link;\n\nreturn [{\n  json: {\n    contactId: $json._id,\n    resumo: resumo + (link ? '\\n\\nConversa: ' + link : ''),\n  },\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-160, 0],
+      "id": "build-summary",
+      "name": "Montar Resumo"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://crm.rdstation.com/api/v1/deals?token=' + $env.RD_CRM_TOKEN }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { deal: { name: '[' + $('Webhook').item.json.body.canal + '] ' + ($('Webhook').item.json.body.interesse || 'lead') + ' - ' + ($('Webhook').item.json.body.nome || 'sem nome') }, contacts: [{ id: $json.contactId }] } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [80, 0],
+      "id": "rd-deal",
+      "name": "Criar Negociação RD Station"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://crm.rdstation.com/api/v1/activities?token=' + $env.RD_CRM_TOKEN }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { activity: { deal_id: $json._id, text: 'Resumo da conversa:\\n' + $('Montar Resumo').item.json.resumo } } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [320, 0],
+      "id": "rd-note",
+      "name": "Criar Anotação RD Station"
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ { ok: true } }}", "options": {} },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [560, 0],
+      "id": "respond",
+      "name": "Responder"
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{ "node": "Buscar Contato RD Station", "type": "main", "index": 0 }]] },
+    "Buscar Contato RD Station": { "main": [[{ "node": "Contato já existe?", "type": "main", "index": 0 }]] },
+    "Contato já existe?": { "main": [[{ "node": "Atualizar Contato RD Station", "type": "main", "index": 0 }], [{ "node": "Criar Contato RD Station", "type": "main", "index": 0 }]] },
+    "Atualizar Contato RD Station": { "main": [[{ "node": "Montar Resumo", "type": "main", "index": 0 }]] },
+    "Criar Contato RD Station": { "main": [[{ "node": "Montar Resumo", "type": "main", "index": 0 }]] },
+    "Montar Resumo": { "main": [[{ "node": "Criar Negociação RD Station", "type": "main", "index": 0 }]] },
+    "Criar Negociação RD Station": { "main": [[{ "node": "Criar Anotação RD Station", "type": "main", "index": 0 }]] },
+    "Criar Anotação RD Station": { "main": [[{ "node": "Responder", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}
