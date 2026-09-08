@@ -13,10 +13,11 @@ export default async function ProdutosPage() {
 
   return (
     <main className="mx-auto max-w-2xl p-8">
-      <h1 className="font-display mb-6 text-xl font-bold text-nathai-ink">Produtos (sincronização com o Vista)</h1>
+      <h1 className="font-display mb-6 text-xl font-bold text-nathai-ink">Produtos (catálogo de imóveis)</h1>
       <p className="mb-4 text-sm text-nathai-ink/60">
-        Os imóveis são sincronizados automaticamente a partir do CRM Vista/LOFT. Não é possível cadastrar
-        imóveis manualmente aqui.
+        Catálogo de imóveis, sincronizado automaticamente a partir do portal do cliente quando configurado
+        (ainda não disponível para este cliente). Não é possível cadastrar imóveis manualmente aqui. Este
+        catálogo é independente do CRM (RD Station).
       </p>
       <dl className="grid grid-cols-1 gap-4 rounded-2xl border border-nathai-mist bg-white p-6 shadow-card sm:grid-cols-3">
         <div>

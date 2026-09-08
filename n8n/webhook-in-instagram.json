@@ -71,7 +71,9 @@
             { "id": "cfg-ig-user-id", "name": "igUserId", "value": "17841409145832360", "type": "string" },
             { "id": "cfg-graph-version", "name": "graphApiVersion", "value": "v25.0", "type": "string" },
             { "id": "cfg-comment-public-reply", "name": "commentPublicReply", "value": "Te chamamos no Direct! 📩 Vem conversar com a gente por lá.", "type": "string" },
-            { "id": "cfg-comment-dm-opening", "name": "commentDmOpening", "value": "Oi! Vimos seu comentário no post 😊 Sou o assistente da Apartamento Imóveis Natal — posso te ajudar com compra, locação ou administração de imóveis. O que você está procurando?", "type": "string" }
+            { "id": "cfg-comment-dm-opening", "name": "commentDmOpening", "value": "Oi! Vimos seu comentário no post 😊 Sou o assistente da Apartamento Imóveis Natal — posso te ajudar com compra, locação ou administração de imóveis. O que você está procurando?", "type": "string" },
+            { "id": "cfg-nextjs-webhook-base-url", "name": "nextjsWebhookBaseUrl", "value": "", "type": "string" },
+            { "id": "cfg-nextjs-webhook-secret", "name": "nextjsWebhookSecret", "value": "", "type": "string" }
           ]
         },
         "includeOtherFields": true,
@@ -131,7 +133,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.NEXTJS_WEBHOOK_BASE_URL + '/api/webhook/instagram/' + $env.NEXTJS_WEBHOOK_SECRET }}",
+        "url": "={{ $('Config').item.json.nextjsWebhookBaseUrl + '/api/webhook/instagram/' + $('Config').item.json.nextjsWebhookSecret }}",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ $json }}",

@@ -20,8 +20,9 @@ instância isolada deste cliente:
    `instagram-send` — mesmo valor nos dois (obtido em
    `graph.instagram.com/me/conversations?fields=participants`, não em `/me` nem `entry.id`
    do webhook cru — ver "IDs do Instagram" abaixo).
-4. Configurar `NEXTJS_WEBHOOK_BASE_URL` e `NEXTJS_WEBHOOK_SECRET` como variáveis de ambiente
-   do n8n (o segundo precisa ser igual ao `WEBHOOK_SECRET` do `.env` do Next.js).
+4. Preencher `nextjsWebhookBaseUrl` e `nextjsWebhookSecret` diretamente no node "Config" do
+   workflow `webhook-in-instagram` (não são mais variáveis de ambiente do n8n; o segundo
+   precisa ser igual ao `WEBHOOK_SECRET` do `.env` do Next.js).
 5. No `.env` do Next.js, apontar `N8N_LEAD_WEBHOOK_URL` e `N8N_INSTAGRAM_SEND_WEBHOOK_URL`
    pras Production URLs dos webhooks correspondentes.
 6. Ativar os 3 workflows.
