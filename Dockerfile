@@ -16,7 +16,7 @@ RUN npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-RUN apk add --no-cache openssl tini
+RUN apk add --no-cache openssl tini bash
 
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/.next ./.next
@@ -27,8 +27,9 @@ COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/src ./src
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
 COPY --from=builder /app/next.config.mjs ./next.config.mjs
+RUN chmod +x ./scripts/start-all.sh
 
-EXPOSE 3000
+EXPOSE 3000 4001
 
 ENTRYPOINT ["/sbin/tini", "--"]
-CMD ["npm", "start"]
+CMD ["./scripts/start-all.sh"]
