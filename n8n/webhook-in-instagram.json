@@ -122,11 +122,26 @@
     },
     {
       "parameters": {
-        "jsCode": "return [{\n  json: {\n    senderId: $json.recipientId,\n    messageId: $json.messageId,\n    content: $json.messageText,\n  },\n}];\n"
+        "method": "GET",
+        "url": "={{ 'https://graph.instagram.com/' + $('Config').item.json.graphApiVersion + '/' + $json.recipientId + '?fields=username,profile_pic' }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-320, 460],
+      "id": "fetch-profile",
+      "name": "Buscar Perfil do Cliente",
+      "credentials": { "httpHeaderAuth": { "id": "REPLACE_ME", "name": "Instagram Graph API" } }
+    },
+    {
+      "parameters": {
+        "jsCode": "const profile = $json;\nconst evt = $('Extrair PSID').item.json;\nreturn [{\n  json: {\n    senderId: evt.recipientId,\n    messageId: evt.messageId,\n    content: evt.messageText,\n    customerName: profile.username || undefined,\n    profilePictureUrl: profile.profile_pic || undefined,\n  },\n}];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-200, 460],
+      "position": [-80, 460],
       "id": "build-payload",
       "name": "Montar Payload Next.js"
     },
@@ -198,7 +213,8 @@
     "Config": { "main": [[{ "node": "Parse Evento Instagram", "type": "main", "index": 0 }, { "node": "Parse Evento Comentario", "type": "main", "index": 0 }]] },
     "Parse Evento Instagram": { "main": [[{ "node": "Buscar Conversa", "type": "main", "index": 0 }]] },
     "Buscar Conversa": { "main": [[{ "node": "Extrair PSID", "type": "main", "index": 0 }]] },
-    "Extrair PSID": { "main": [[{ "node": "Montar Payload Next.js", "type": "main", "index": 0 }]] },
+    "Extrair PSID": { "main": [[{ "node": "Buscar Perfil do Cliente", "type": "main", "index": 0 }]] },
+    "Buscar Perfil do Cliente": { "main": [[{ "node": "Montar Payload Next.js", "type": "main", "index": 0 }]] },
     "Montar Payload Next.js": { "main": [[{ "node": "Enviar para Next.js", "type": "main", "index": 0 }]] },
     "Parse Evento Comentario": { "main": [[{ "node": "Responder Comentario Publicamente", "type": "main", "index": 0 }]] },
     "Responder Comentario Publicamente": { "main": [[{ "node": "Enviar DM Privada do Comentario", "type": "main", "index": 0 }]] }
