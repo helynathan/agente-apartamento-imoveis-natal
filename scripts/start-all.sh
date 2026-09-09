@@ -14,7 +14,7 @@ npm run worker-instagram &
 PIDS="$PIDS $!"
 npm run realtime &
 PIDS="$PIDS $!"
-npm run close-inactive-conversations &
+npm run close-inactive &
 PIDS="$PIDS $!"
 npm run escalate-sla &
 PIDS="$PIDS $!"
