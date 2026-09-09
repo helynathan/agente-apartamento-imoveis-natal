@@ -8,8 +8,11 @@ RUN npm ci
 COPY . .
 RUN npx prisma generate
 
-ARG NEXT_PUBLIC_REALTIME_WS_URL
-ENV NEXT_PUBLIC_REALTIME_WS_URL=$NEXT_PUBLIC_REALTIME_WS_URL
+# O EasyPanel não repassa as variáveis da aba "Ambiente" como build args do Docker,
+# e NEXT_PUBLIC_* precisa existir no momento do build (fica embutido no bundle do
+# navegador) — por isso o valor vem fixo aqui, não do .env em runtime. Se o domínio
+# do realtime mudar, é preciso editar esta linha e fazer novo build.
+ENV NEXT_PUBLIC_REALTIME_WS_URL=wss://ws-aptimoveis.nathai.com.br/ws
 
 RUN npm run build
 
