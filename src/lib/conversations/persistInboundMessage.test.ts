@@ -395,7 +395,7 @@ describe('persistInboundMessage', () => {
     expect(second.isNewConversation).toBe(false);
   });
 
-  it('stores profilePictureUrl only when the conversation is created, never overwriting it on later messages', async () => {
+  it('updates profilePictureUrl when a later message includes a new one', async () => {
     const first = await persistInboundMessage({
       channel: 'WHATSAPP',
       phone: '5511999999999',
@@ -409,6 +409,25 @@ describe('persistInboundMessage', () => {
       text: 'Segunda',
       externalId: 'MSG2',
       profilePictureUrl: 'https://example.com/foto-diferente.jpg',
+    });
+
+    const conversation = await db.conversation.findUnique({ where: { id: first.conversationId } });
+    expect(conversation?.profilePictureUrl).toBe('https://example.com/foto-diferente.jpg');
+  });
+
+  it('keeps the existing profilePictureUrl when a later message has none', async () => {
+    const first = await persistInboundMessage({
+      channel: 'WHATSAPP',
+      phone: '5511999999999',
+      text: 'Primeira',
+      externalId: 'MSG1',
+      profilePictureUrl: 'https://example.com/foto.jpg',
+    });
+    await persistInboundMessage({
+      channel: 'WHATSAPP',
+      phone: '5511999999999',
+      text: 'Segunda',
+      externalId: 'MSG2',
     });
 
     const conversation = await db.conversation.findUnique({ where: { id: first.conversationId } });

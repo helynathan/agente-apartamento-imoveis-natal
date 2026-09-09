@@ -29,7 +29,12 @@ export async function persistInboundMessage(params: {
 
   const conversation = await db.conversation.upsert({
     where: identity,
-    update: { lastInboundAt: new Date(), slaEscalatedAt: null, ...(params.name ? { customerName: params.name } : {}) },
+    update: {
+      lastInboundAt: new Date(),
+      slaEscalatedAt: null,
+      ...(params.name ? { customerName: params.name } : {}),
+      ...(params.profilePictureUrl ? { profilePictureUrl: params.profilePictureUrl } : {}),
+    },
     create: {
       channel: params.channel,
       customerExternalId: params.phone,
