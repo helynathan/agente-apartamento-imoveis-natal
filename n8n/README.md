@@ -26,7 +26,7 @@ instância isolada deste cliente:
    precisa ser igual ao `WEBHOOK_SECRET` do `.env` do Next.js).
 5. No `.env` do Next.js, apontar `N8N_LEAD_WEBHOOK_URL`, `N8N_INSTAGRAM_SEND_WEBHOOK_URL` e
    `N8N_RESOLVE_POST_URL_WEBHOOK_URL` pras Production URLs dos webhooks correspondentes.
-6. Ativar os 3 workflows.
+6. Ativar os 4 workflows.
 
 ## IDs do Instagram (herdado do projeto Bless — não pular)
 
