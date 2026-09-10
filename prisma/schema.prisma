@@ -63,6 +63,7 @@ model Conversation {
   lastOutboundAt DateTime?
   customerName   String?
   profilePictureUrl String?
+  originMediaId  String?
   leadPhone      String?
   isLead         Boolean  @default(false)
   crmSyncedAt    DateTime?
@@ -124,4 +125,13 @@ model ProductPage {
   lastError     String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+}
+
+model PostListing {
+  id           String   @id @default(cuid())
+  mediaId      String   @unique
+  postUrl      String
+  propertyText String   @default("")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
