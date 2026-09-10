@@ -1,0 +1,111 @@
+{
+  "name": "Apartamento Imoveis Natal - Resolve Post URL",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Setup antes de ativar\n\n1. Preencha `igUserId`/`graphApiVersion` no node \"Config\" (mesmos valores dos outros 3 workflows deste cliente).\n2. Credencial Instagram (HTTP Header Auth) no node \"Buscar Mídia Recente\" — mesma credencial já usada nos outros workflows.\n3. No `.env` do Next.js, `N8N_RESOLVE_POST_URL_WEBHOOK_URL` deve apontar pra Production URL do node \"Webhook\" abaixo.\n\nEsse workflow só busca entre os 50 posts mais recentes da conta — o admin deve vincular o PDF logo após publicar o post.",
+        "height": 280,
+        "width": 420
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-1120, -280],
+      "id": "sticky-setup",
+      "name": "Instruções de Setup"
+    },
+    {
+      "parameters": { "httpMethod": "POST", "path": "apartamentoimoveis-resolve-post-url", "responseMode": "responseNode", "options": {} },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-1120, 0],
+      "id": "webhook",
+      "name": "Webhook",
+      "webhookId": "apartamentoimoveis-resolve-post-url"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "cfg-ig-user-id", "name": "igUserId", "value": "17841409145832360", "type": "string" },
+            { "id": "cfg-graph-version", "name": "graphApiVersion", "value": "v25.0", "type": "string" }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-880, 0],
+      "id": "config",
+      "name": "Config"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://graph.instagram.com/' + $json.graphApiVersion + '/' + $json.igUserId + '/media?fields=id,permalink&limit=50' }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-640, 0],
+      "id": "fetch-media",
+      "name": "Buscar Mídia Recente",
+      "credentials": { "httpHeaderAuth": { "id": "REPLACE_ME", "name": "Instagram Graph API" } }
+    },
+    {
+      "parameters": {
+        "jsCode": "function extractShortcode(url) {\n  if (!url) return null;\n  const match = String(url).match(/\\/(?:p|reel|tv)\\/([^/?]+)/);\n  return match ? match[1] : null;\n}\n\nconst targetShortcode = extractShortcode($('Webhook').item.json.body.postUrl);\nconst media = ($input.first().json.data || []).find((m) => extractShortcode(m.permalink) === targetShortcode);\n\nif (!media || !targetShortcode) {\n  return [{ json: { error: 'not_found' } }];\n}\n\nreturn [{ json: { mediaId: media.id } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-400, 0],
+      "id": "find-media",
+      "name": "Encontrar Media ID"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "conditions": [
+            { "id": "cond-found", "leftValue": "={{ $json.mediaId }}", "rightValue": "", "operator": { "type": "string", "operation": "notEquals" } }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [-160, 0],
+      "id": "if-found",
+      "name": "IF Encontrado"
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ { mediaId: $json.mediaId } }}", "options": {} },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [80, -100],
+      "id": "respond-found",
+      "name": "Responder Encontrado"
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ { error: 'not_found' } }}", "options": { "responseCode": 404 } },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [80, 100],
+      "id": "respond-not-found",
+      "name": "Responder Não Encontrado"
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{ "node": "Config", "type": "main", "index": 0 }]] },
+    "Config": { "main": [[{ "node": "Buscar Mídia Recente", "type": "main", "index": 0 }]] },
+    "Buscar Mídia Recente": { "main": [[{ "node": "Encontrar Media ID", "type": "main", "index": 0 }]] },
+    "Encontrar Media ID": { "main": [[{ "node": "IF Encontrado", "type": "main", "index": 0 }]] },
+    "IF Encontrado": { "main": [[{ "node": "Responder Encontrado", "type": "main", "index": 0 }], [{ "node": "Responder Não Encontrado", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}
