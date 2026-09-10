@@ -433,4 +433,36 @@ describe('persistInboundMessage', () => {
     const conversation = await db.conversation.findUnique({ where: { id: first.conversationId } });
     expect(conversation?.profilePictureUrl).toBe('https://example.com/foto.jpg');
   });
+
+  it('sets originMediaId on a new conversation and never changes it later', async () => {
+    const first = await persistInboundMessage({
+      channel: 'INSTAGRAM',
+      phone: 'ig-user-1',
+      text: 'Primeira',
+      externalId: 'MSG1',
+      originMediaId: 'media-abc',
+    });
+    await persistInboundMessage({
+      channel: 'INSTAGRAM',
+      phone: 'ig-user-1',
+      text: 'Segunda',
+      externalId: 'MSG2',
+      originMediaId: 'media-diferente',
+    });
+
+    const conversation = await db.conversation.findUnique({ where: { id: first.conversationId } });
+    expect(conversation?.originMediaId).toBe('media-abc');
+  });
+
+  it('leaves originMediaId null when not provided on creation', async () => {
+    const first = await persistInboundMessage({
+      channel: 'INSTAGRAM',
+      phone: 'ig-user-2',
+      text: 'Primeira',
+      externalId: 'MSG3',
+    });
+
+    const conversation = await db.conversation.findUnique({ where: { id: first.conversationId } });
+    expect(conversation?.originMediaId).toBeNull();
+  });
 });

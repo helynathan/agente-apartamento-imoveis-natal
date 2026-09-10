@@ -132,4 +132,17 @@ describe('POST /api/webhook/instagram/[secret]', () => {
       expect.objectContaining({ profilePictureUrl: 'https://scontent.cdninstagram.com/pic.jpg' })
     );
   });
+
+  it('passes originMediaId through to persistInboundMessage when present', async () => {
+    await callWithSecret('correct-secret', {
+      senderId: 'ig-user-1',
+      messageId: 'IGM123',
+      content: 'Olá',
+      originMediaId: 'media-abc',
+    });
+
+    expect(persistInboundMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ originMediaId: 'media-abc' })
+    );
+  });
 });

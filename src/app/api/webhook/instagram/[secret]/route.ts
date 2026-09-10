@@ -33,6 +33,7 @@ export async function POST(request: Request, { params }: { params: { secret: str
     externalId: parsed.messageId,
     name: parsed.name,
     profilePictureUrl: parsed.profilePictureUrl,
+    originMediaId: parsed.originMediaId,
   });
   await broadcastEvent({ type: 'queue:updated' });
   await broadcastEvent({ type: 'message:new', conversationId: result.conversationId });

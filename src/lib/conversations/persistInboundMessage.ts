@@ -11,6 +11,7 @@ export async function persistInboundMessage(params: {
   externalId: string;
   name?: string;
   profilePictureUrl?: string;
+  originMediaId?: string;
 }): Promise<{
   conversationId: string;
   messageId: string;
@@ -41,6 +42,7 @@ export async function persistInboundMessage(params: {
       lastInboundAt: new Date(),
       customerName: params.name,
       profilePictureUrl: params.profilePictureUrl,
+      originMediaId: params.originMediaId,
     },
   });
 

@@ -4,6 +4,7 @@ interface ParsedInstagramMessage {
   text: string;
   name?: string;
   profilePictureUrl?: string;
+  originMediaId?: string;
 }
 
 export function parseInstagramWebhook(payload: unknown): ParsedInstagramMessage | null {
@@ -15,6 +16,7 @@ export function parseInstagramWebhook(payload: unknown): ParsedInstagramMessage 
   const text = body.content;
   const name = body.customerName;
   const profilePictureUrl = body.profilePictureUrl;
+  const originMediaId = body.originMediaId;
 
   if (typeof senderId !== 'string' || senderId.length === 0) return null;
   if (typeof messageId !== 'string' || messageId.length === 0) return null;
@@ -26,5 +28,6 @@ export function parseInstagramWebhook(payload: unknown): ParsedInstagramMessage 
     text,
     name: typeof name === 'string' && name.length > 0 ? name : undefined,
     profilePictureUrl: typeof profilePictureUrl === 'string' && profilePictureUrl.length > 0 ? profilePictureUrl : undefined,
+    originMediaId: typeof originMediaId === 'string' && originMediaId.length > 0 ? originMediaId : undefined,
   };
 }
