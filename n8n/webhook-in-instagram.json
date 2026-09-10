@@ -137,7 +137,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const profile = $json;\nconst evt = $('Extrair PSID').item.json;\nreturn [{\n  json: {\n    senderId: evt.recipientId,\n    messageId: evt.messageId,\n    content: evt.messageText,\n    customerName: profile.username || undefined,\n    profilePictureUrl: profile.profile_pic || undefined,\n    originMediaId: evt.originMediaId || undefined,\n  },\n}];\n"
+        "jsCode": "const profile = $json;\nconst evt = $('Extrair PSID').item.json;\nlet originMediaId = evt.originMediaId;\nif (!originMediaId) {\n  const globalData = $getWorkflowStaticData('global');\n  const fallbackContext = globalData.postContextByCommenter && globalData.postContextByCommenter[evt.recipientId];\n  const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;\n  if (fallbackContext && (Date.now() - fallbackContext.timestamp <= sevenDaysMs)) {\n    originMediaId = fallbackContext.mediaId;\n  }\n}\nreturn [{\n  json: {\n    senderId: evt.recipientId,\n    messageId: evt.messageId,\n    content: evt.messageText,\n    customerName: profile.username || undefined,\n    profilePictureUrl: profile.profile_pic || undefined,\n    originMediaId: originMediaId || undefined,\n  },\n}];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,

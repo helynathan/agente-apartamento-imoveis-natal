@@ -103,7 +103,7 @@ export async function processInboundForAi(conversationId: string): Promise<void>
     try {
       const listing = await findPostListingByMediaId(conversation.originMediaId);
       if (listing) {
-        productContext = listing.propertyText;
+        productContext = listing.propertyText.slice(0, 6000);
       }
     } catch (error) {
       console.warn('Post listing lookup failed, continuing without post context', error);

@@ -13,7 +13,7 @@ instância isolada deste cliente:
 
 ## Setup
 
-1. Importar os 3 arquivos JSON no n8n (**Workflows → Import from File**).
+1. Importar os 4 arquivos JSON no n8n (**Workflows → Import from File**).
 2. Em cada um, preencher as credenciais indicadas na sticky note do próprio workflow
    (Instagram: HTTP Header Auth com `Authorization: Bearer TOKEN`; RD Station: credencial
    Query Auth — nome do parâmetro `token`, valor o token da API do RD Station CRM).
@@ -24,8 +24,8 @@ instância isolada deste cliente:
 4. Preencher `nextjsWebhookBaseUrl` e `nextjsWebhookSecret` diretamente no node "Config" do
    workflow `webhook-in-instagram` (não são mais variáveis de ambiente do n8n; o segundo
    precisa ser igual ao `WEBHOOK_SECRET` do `.env` do Next.js).
-5. No `.env` do Next.js, apontar `N8N_LEAD_WEBHOOK_URL` e `N8N_INSTAGRAM_SEND_WEBHOOK_URL`
-   pras Production URLs dos webhooks correspondentes.
+5. No `.env` do Next.js, apontar `N8N_LEAD_WEBHOOK_URL`, `N8N_INSTAGRAM_SEND_WEBHOOK_URL` e
+   `N8N_RESOLVE_POST_URL_WEBHOOK_URL` pras Production URLs dos webhooks correspondentes.
 6. Ativar os 3 workflows.
 
 ## IDs do Instagram (herdado do projeto Bless — não pular)
