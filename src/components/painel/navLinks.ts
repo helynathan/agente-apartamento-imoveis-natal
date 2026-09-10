@@ -9,6 +9,7 @@ const ADMIN_LINKS: NavLink[] = [
   { href: '/painel/admin/setores', label: 'Setores' },
   { href: '/painel/admin/usuarios', label: 'Usuários' },
   { href: '/painel/admin/produtos', label: 'Produtos' },
+  { href: '/painel/admin/posts', label: 'Posts com Imóvel' },
 ];
 
 export function getNavLinks(role: string): NavLink[] {
