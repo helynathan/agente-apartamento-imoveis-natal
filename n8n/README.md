@@ -1,7 +1,7 @@
 # n8n — pontes finas (Apartamento e Imóveis Natal)
 
 Diferente do projeto Bless, o n8n aqui **não orquestra a conversa** — isso vive inteiro no
-Next.js (`processInboundForAi`, painel, fila). O n8n só executa 3 ações pontuais, numa
+Next.js (`processInboundForAi`, painel, fila). O n8n só executa 4 ações pontuais, numa
 instância isolada deste cliente:
 
 | Workflow | Papel | Chamado por |
@@ -9,6 +9,7 @@ instância isolada deste cliente:
 | `webhook-in-instagram.json` | Recebe o webhook bruto da Meta, resolve o PSID correto (evita responder pra pessoa errada — ver seção abaixo), repassa evento normalizado pro Next.js | Meta (Instagram) |
 | `instagram-send.json` | Envia mensagem via Graph API do Instagram | Next.js (`sendInstagramMessage.ts`, via `N8N_INSTAGRAM_SEND_WEBHOOK_URL`) |
 | `lead-webhook-rdstation.json` | Cria/atualiza Contato e Negociação no RD Station | Next.js (`notifyLeadToCrm.ts`, via `N8N_LEAD_WEBHOOK_URL`) |
+| `resolve-post-url.json` | Recebe um link de post do Instagram, devolve o `media_id` correspondente | Next.js (tela de admin "Posts com Imóvel", via `resolvePostUrl.ts`, `N8N_RESOLVE_POST_URL_WEBHOOK_URL`) |
 
 ## Setup
 
@@ -49,3 +50,20 @@ Isso foi identificado na revisão final como uma exceção à regra de "toda men
 Next.js", mas decisão explícita do usuário: não é necessário resolver isso agora. Se algum dia
 importar ter esse histórico completo no painel, o ajuste é fazer esse branch também chamar o
 mesmo endpoint que `webhook-in-instagram` usa pra mensagens normais, antes de responder.
+
+## Contexto de imóvel por post (PDF vinculado)
+
+Um admin vincula um PDF a um post específico na tela `/painel/admin/posts`
+do Next.js. Quando alguém comenta nesse post, o node `Parse Evento
+Comentario` de `webhook-in-instagram.json` guarda `{mediaId, timestamp}`
+por `commenterId` na memória do workflow (`$getWorkflowStaticData('global')`,
+chave `postContextByCommenter`), expirando entradas com mais de 7 dias. Se
+essa pessoa responder a DM aberta pelo comentário, `Parse Evento Instagram`
+resgata esse vínculo e inclui `originMediaId` no payload mandado pro
+Next.js — que grava esse valor na conversa (só na criação, nunca depois) e
+usa o texto do PDF vinculado como contexto extra pra IA em todo turno da
+conversa.
+
+Limitação aceita: se a mesma pessoa comentar em posts diferentes antes de
+responder a alguma DM, o vínculo mais recente sobrescreve o anterior (a
+memória é por `commenterId`, não por comentário específico).
