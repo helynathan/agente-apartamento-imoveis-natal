@@ -87,7 +87,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const body = $input.first().json.body;\nconst entry = body?.entry?.[0];\nconst messaging = entry?.messaging?.[0];\nconst ourAccountId = entry?.id;\n\nif (\n  !messaging ||\n  !messaging.message ||\n  messaging.message.is_echo ||\n  !messaging.message.text ||\n  messaging.sender?.id === ourAccountId\n) {\n  return [];\n}\n\nconst mid = messaging.message.mid;\n\nconst staticData = $getWorkflowStaticData('node');\nstaticData.processedMessageIds = staticData.processedMessageIds || {};\nif (mid && staticData.processedMessageIds[mid]) {\n  return [];\n}\nif (mid) {\n  staticData.processedMessageIds[mid] = true;\n}\n\nreturn [{\n  json: {\n    senderId: messaging.sender.id,\n    recipientId: messaging.recipient.id,\n    messageText: messaging.message.text,\n    messageId: mid,\n  },\n}];\n"
+        "jsCode": "const body = $input.first().json.body;\nconst entry = body?.entry?.[0];\nconst messaging = entry?.messaging?.[0];\nconst ourAccountId = entry?.id;\n\nif (\n  !messaging ||\n  !messaging.message ||\n  messaging.message.is_echo ||\n  !messaging.message.text ||\n  messaging.sender?.id === ourAccountId\n) {\n  return [];\n}\n\nconst mid = messaging.message.mid;\n\nconst staticData = $getWorkflowStaticData('node');\nstaticData.processedMessageIds = staticData.processedMessageIds || {};\nif (mid && staticData.processedMessageIds[mid]) {\n  return [];\n}\nif (mid) {\n  staticData.processedMessageIds[mid] = true;\n}\n\nconst senderId = messaging.sender.id;\nconst globalData = $getWorkflowStaticData('global');\nconst postContext = globalData.postContextByCommenter && globalData.postContextByCommenter[senderId];\nconst sevenDaysMs = 7 * 24 * 60 * 60 * 1000;\nconst originMediaId = postContext && (Date.now() - postContext.timestamp <= sevenDaysMs) ? postContext.mediaId : null;\n\nreturn [{\n  json: {\n    senderId,\n    recipientId: messaging.recipient.id,\n    messageText: messaging.message.text,\n    messageId: mid,\n    originMediaId,\n  },\n}];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -137,7 +137,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const profile = $json;\nconst evt = $('Extrair PSID').item.json;\nreturn [{\n  json: {\n    senderId: evt.recipientId,\n    messageId: evt.messageId,\n    content: evt.messageText,\n    customerName: profile.username || undefined,\n    profilePictureUrl: profile.profile_pic || undefined,\n  },\n}];\n"
+        "jsCode": "const profile = $json;\nconst evt = $('Extrair PSID').item.json;\nreturn [{\n  json: {\n    senderId: evt.recipientId,\n    messageId: evt.messageId,\n    content: evt.messageText,\n    customerName: profile.username || undefined,\n    profilePictureUrl: profile.profile_pic || undefined,\n    originMediaId: evt.originMediaId || undefined,\n  },\n}];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -162,7 +162,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const body = $input.first().json.body;\nconst entry = body?.entry?.[0];\nconst change = entry?.changes?.find((c) => c.field === 'comments');\nconst ourAccountId = entry?.id;\n\nif (!change) {\n  return [];\n}\n\nconst value = change.value;\n\nif (!value || !value.id || value.from?.id === ourAccountId) {\n  return [];\n}\n\nconst commentId = value.id;\n\nconst staticData = $getWorkflowStaticData('node');\nstaticData.processedCommentIds = staticData.processedCommentIds || {};\nif (staticData.processedCommentIds[commentId]) {\n  return [];\n}\nstaticData.processedCommentIds[commentId] = true;\n\nreturn [{\n  json: {\n    commentId,\n    commentText: value.text || '',\n    commenterId: value.from?.id || null,\n  },\n}];\n"
+        "jsCode": "const body = $input.first().json.body;\nconst entry = body?.entry?.[0];\nconst change = entry?.changes?.find((c) => c.field === 'comments');\nconst ourAccountId = entry?.id;\n\nif (!change) {\n  return [];\n}\n\nconst value = change.value;\n\nif (!value || !value.id || value.from?.id === ourAccountId) {\n  return [];\n}\n\nconst commentId = value.id;\n\nconst staticData = $getWorkflowStaticData('node');\nstaticData.processedCommentIds = staticData.processedCommentIds || {};\nif (staticData.processedCommentIds[commentId]) {\n  return [];\n}\nstaticData.processedCommentIds[commentId] = true;\n\nconst commenterId = value.from?.id || null;\nconst mediaId = value.media?.id || null;\n\nif (commenterId && mediaId) {\n  const globalData = $getWorkflowStaticData('global');\n  globalData.postContextByCommenter = globalData.postContextByCommenter || {};\n  const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;\n  const now = Date.now();\n  for (const key of Object.keys(globalData.postContextByCommenter)) {\n    if (now - globalData.postContextByCommenter[key].timestamp > sevenDaysMs) {\n      delete globalData.postContextByCommenter[key];\n    }\n  }\n  globalData.postContextByCommenter[commenterId] = { mediaId, timestamp: now };\n}\n\nreturn [{\n  json: {\n    commentId,\n    commentText: value.text || '',\n    commenterId,\n  },\n}];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
