@@ -16,11 +16,15 @@ vi.mock('@/lib/products/searchRelevantProducts', () => ({
 vi.mock('@/lib/crm/notifyLeadToCrm', () => ({
   notifyLeadToCrm: vi.fn().mockResolvedValue(undefined),
 }));
+vi.mock('@/lib/posts/postListingRepository', () => ({
+  findPostListingByMediaId: vi.fn().mockResolvedValue(null),
+}));
 
 import { requestTriageDecision } from '@/lib/ai/openaiClient';
 import { enqueueOutboundMessage } from '@/lib/queue/enqueueOutboundMessage';
 import { searchRelevantProducts } from '@/lib/products/searchRelevantProducts';
 import { notifyLeadToCrm } from '@/lib/crm/notifyLeadToCrm';
+import { findPostListingByMediaId } from '@/lib/posts/postListingRepository';
 import { processInboundForAi } from '@/lib/ai/processInboundForAi';
 
 describe('processInboundForAi', () => {
@@ -181,6 +185,41 @@ describe('processInboundForAi', () => {
     expect(requestTriageDecision).toHaveBeenCalledWith(
       expect.objectContaining({ productContext: undefined })
     );
+  });
+
+  it('uses the linked PostListing propertyText as productContext when originMediaId matches one', async () => {
+    const conversation = await db.conversation.create({
+      data: { customerExternalId: 'ig-user-1', channel: 'INSTAGRAM', aiMessageCount: 1, originMediaId: 'media-abc' },
+    });
+    vi.mocked(findPostListingByMediaId).mockResolvedValueOnce({
+      id: 'listing-1',
+      mediaId: 'media-abc',
+      postUrl: 'https://www.instagram.com/p/ABC123/',
+      propertyText: 'Apartamento 2 quartos, 80m², R$ 350.000',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    vi.mocked(requestTriageDecision).mockResolvedValue({ acao: 'responder', mensagem: 'Sim, temos esse imóvel!', eLead: false });
+
+    await processInboundForAi(conversation.id);
+
+    expect(findPostListingByMediaId).toHaveBeenCalledWith('media-abc');
+    expect(requestTriageDecision).toHaveBeenCalledWith(
+      expect.objectContaining({ productContext: 'Apartamento 2 quartos, 80m², R$ 350.000' })
+    );
+    expect(searchRelevantProducts).not.toHaveBeenCalled();
+  });
+
+  it('falls back to no productContext when originMediaId has no matching PostListing', async () => {
+    const conversation = await db.conversation.create({
+      data: { customerExternalId: 'ig-user-1', channel: 'INSTAGRAM', aiMessageCount: 1, originMediaId: 'media-sem-listing' },
+    });
+    vi.mocked(findPostListingByMediaId).mockResolvedValueOnce(null);
+    vi.mocked(requestTriageDecision).mockResolvedValue({ acao: 'responder', mensagem: 'Olá!', eLead: false });
+
+    await processInboundForAi(conversation.id);
+
+    expect(requestTriageDecision).toHaveBeenCalledWith(expect.objectContaining({ productContext: undefined }));
   });
 
   it('does nothing when the conversation is not in AI_HANDLING', async () => {

@@ -4,6 +4,7 @@ import { enqueueOutboundMessage } from '@/lib/queue/enqueueOutboundMessage';
 import { requestTriageDecision } from '@/lib/ai/openaiClient';
 import { broadcastEvent } from '@/lib/realtime/broadcast';
 import { searchRelevantProducts } from '@/lib/products/searchRelevantProducts';
+import { findPostListingByMediaId } from '@/lib/posts/postListingRepository';
 import { notifyLeadToCrm, type LeadHistoryMessage } from '@/lib/crm/notifyLeadToCrm';
 
 const SAFETY_NET_LIMIT = 6;
@@ -97,8 +98,20 @@ export async function processInboundForAi(conversationId: string): Promise<void>
 
   const lastInboundMessage = [...conversation.messages].reverse().find((m) => m.direction === 'INBOUND');
   let productContext: string | undefined;
+
+  if (conversation.originMediaId) {
+    try {
+      const listing = await findPostListingByMediaId(conversation.originMediaId);
+      if (listing) {
+        productContext = listing.propertyText;
+      }
+    } catch (error) {
+      console.warn('Post listing lookup failed, continuing without post context', error);
+    }
+  }
+
   let products: Array<{ url: string; content: string }> = [];
-  if (lastInboundMessage) {
+  if (!productContext && lastInboundMessage) {
     try {
       products = await searchRelevantProducts(lastInboundMessage.content, 3);
       if (products.length > 0) {
