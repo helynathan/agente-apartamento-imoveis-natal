@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
 import { authOptions } from '@/lib/auth/authOptions';
 import { listUsers } from '@/lib/users/userRepository';
-import { createUserAction, updateUserAction } from './actions';
+import { createUserAction, updateUserAction, updatePasswordAction } from './actions';
 
 export default async function UsuariosPage() {
   const session = await getServerSession(authOptions);
@@ -102,6 +102,21 @@ export default async function UsuariosPage() {
                 className="rounded-lg bg-gradient-to-r from-nathai-blue to-nathai-cyan px-3 py-1 font-display text-sm font-medium text-white shadow-button transition-all duration-200 hover:-translate-y-0.5 hover:shadow-button-hover"
               >
                 Salvar
+              </button>
+            </form>
+            <form action={updatePasswordAction} className="mt-2 flex flex-wrap items-center gap-2">
+              <input type="hidden" name="id" value={user.id} />
+              <input
+                name="password"
+                type="password"
+                placeholder="Nova senha"
+                className="min-w-0 flex-1 rounded-lg border border-nathai-mist px-2 py-1 text-sm outline-none transition focus:border-nathai-blue focus:ring-2 focus:ring-nathai-blue/20"
+              />
+              <button
+                type="submit"
+                className="rounded-lg border border-nathai-mist px-3 py-1 font-display text-sm font-medium text-nathai-ink transition-all duration-200 hover:-translate-y-0.5 hover:bg-nathai-paper"
+              >
+                Alterar senha
               </button>
             </form>
           </li>

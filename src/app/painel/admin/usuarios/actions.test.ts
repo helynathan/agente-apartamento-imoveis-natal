@@ -10,7 +10,7 @@ vi.mock('next/cache', () => ({
 }));
 
 import { getServerSession } from 'next-auth';
-import { createUserAction, updateUserAction } from './actions';
+import { createUserAction, updateUserAction, updatePasswordAction } from './actions';
 
 function formDataFrom(entries: Record<string, string>): FormData {
   const formData = new FormData();
@@ -172,5 +172,57 @@ describe('updateUserAction', () => {
     const formData = formDataFrom({ id: user.id, name: '', email: 'a@example.com', role: 'AGENT', phone: '' });
 
     await expect(updateUserAction(formData)).rejects.toThrow('Nome e email são obrigatórios.');
+  });
+});
+
+describe('updatePasswordAction', () => {
+  afterEach(async () => {
+    vi.clearAllMocks();
+    await db.user.deleteMany();
+  });
+
+  it('changes the password hash when the caller is an admin', async () => {
+    vi.mocked(getServerSession).mockResolvedValue({ user: { role: 'ADMIN' } } as never);
+    const user = await db.user.create({
+      data: { email: 'a@example.com', passwordHash: 'hash-antigo', name: 'A', role: 'AGENT' },
+    });
+
+    const formData = formDataFrom({ id: user.id, password: 'senhanova123' });
+
+    await updatePasswordAction(formData);
+
+    const updated = await db.user.findUnique({ where: { id: user.id } });
+    expect(updated?.passwordHash).not.toBe('hash-antigo');
+    expect(updated?.passwordHash).not.toBe('senhanova123');
+  });
+
+  it('rejects when the caller is not an admin', async () => {
+    vi.mocked(getServerSession).mockResolvedValue({ user: { role: 'AGENT' } } as never);
+    const user = await db.user.create({
+      data: { email: 'a@example.com', passwordHash: 'hash-antigo', name: 'A', role: 'AGENT' },
+    });
+
+    const formData = formDataFrom({ id: user.id, password: 'senhanova123' });
+
+    await expect(updatePasswordAction(formData)).rejects.toThrow(
+      'Apenas administradores podem alterar senhas.',
+    );
+
+    const untouched = await db.user.findUnique({ where: { id: user.id } });
+    expect(untouched?.passwordHash).toBe('hash-antigo');
+  });
+
+  it('rejects an empty password', async () => {
+    vi.mocked(getServerSession).mockResolvedValue({ user: { role: 'ADMIN' } } as never);
+    const user = await db.user.create({
+      data: { email: 'a@example.com', passwordHash: 'hash-antigo', name: 'A', role: 'AGENT' },
+    });
+
+    const formData = formDataFrom({ id: user.id, password: '' });
+
+    await expect(updatePasswordAction(formData)).rejects.toThrow('Senha é obrigatória.');
+
+    const untouched = await db.user.findUnique({ where: { id: user.id } });
+    expect(untouched?.passwordHash).toBe('hash-antigo');
   });
 });

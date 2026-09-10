@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { db } from '@/lib/db';
-import { createUser, listUsers, updateUser } from '@/lib/users/userRepository';
+import { createUser, listUsers, updateUser, updateUserPassword } from '@/lib/users/userRepository';
 
 describe('userRepository', () => {
   afterEach(async () => {
@@ -109,5 +109,21 @@ describe('userRepository', () => {
 
     const stored = await db.user.findUnique({ where: { id: user.id } });
     expect(stored?.phone).toBeNull();
+  });
+
+  it('updates the password hash, never storing the plaintext', async () => {
+    const user = await createUser({
+      email: 'a@example.com',
+      password: 'senhaoriginal',
+      name: 'A',
+      role: 'AGENT',
+    });
+    const originalHash = (await db.user.findUnique({ where: { id: user.id } }))?.passwordHash;
+
+    await updateUserPassword(user.id, 'senhanova123');
+
+    const stored = await db.user.findUnique({ where: { id: user.id } });
+    expect(stored?.passwordHash).not.toBe('senhanova123');
+    expect(stored?.passwordHash).not.toBe(originalHash);
   });
 });

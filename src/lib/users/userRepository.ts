@@ -35,3 +35,8 @@ export async function updateUser(
     select: { id: true, email: true, name: true, role: true, phone: true },
   });
 }
+
+export async function updateUserPassword(id: string, password: string): Promise<void> {
+  const passwordHash = await hashPassword(password);
+  await db.user.update({ where: { id }, data: { passwordHash } });
+}

@@ -2,7 +2,7 @@
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/authOptions';
-import { createUser, updateUser } from '@/lib/users/userRepository';
+import { createUser, updateUser, updateUserPassword } from '@/lib/users/userRepository';
 import { isValidPhone } from '@/lib/users/isValidPhone';
 import { revalidatePath } from 'next/cache';
 
@@ -49,5 +49,22 @@ export async function updateUserAction(formData: FormData): Promise<void> {
   }
 
   await updateUser(id, { name, email, role, phone: phone || null });
+  revalidatePath('/painel/admin/usuarios');
+}
+
+export async function updatePasswordAction(formData: FormData): Promise<void> {
+  const session = await getServerSession(authOptions);
+  if (session?.user.role !== 'ADMIN') {
+    throw new Error('Apenas administradores podem alterar senhas.');
+  }
+
+  const id = String(formData.get('id'));
+  const password = String(formData.get('password') ?? '');
+
+  if (!password) {
+    throw new Error('Senha é obrigatória.');
+  }
+
+  await updateUserPassword(id, password);
   revalidatePath('/painel/admin/usuarios');
 }
