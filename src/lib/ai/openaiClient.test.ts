@@ -275,6 +275,33 @@ describe('requestTriageDecision', () => {
     expect(result.telefoneCapturado).toBeUndefined();
   });
 
+  it('treats the literal string "null" in telefoneCapturado as absent (model sometimes returns it instead of JSON null)', async () => {
+    mockCreate.mockResolvedValue({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              acao: 'responder',
+              mensagem: 'Você está interessado em comprar ou alugar?',
+              sectorId: null,
+              eLead: true,
+              telefoneCapturado: 'null',
+            }),
+          },
+        },
+      ],
+    });
+
+    const result = await requestTriageDecision({
+      messages: [{ direction: 'INBOUND', content: 'Quero saber mais sobre esse imóvel' }],
+      sectors: [],
+      channel: 'INSTAGRAM',
+      hasLeadPhone: false,
+    });
+
+    expect(result.telefoneCapturado).toBeUndefined();
+  });
+
   it('throws when telefoneCapturado is present but not a string', async () => {
     mockCreate.mockResolvedValue({
       choices: [

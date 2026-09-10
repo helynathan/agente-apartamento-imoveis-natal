@@ -153,11 +153,17 @@ export async function requestTriageDecision(params: {
     throw new Error('AI response has an invalid telefoneCapturado field');
   }
 
+  // O modelo às vezes devolve a string literal "null" em vez do null de JSON de
+  // verdade nesse campo — trata como ausente, senão vira um leadPhone truthy-mas-falso
+  // que libera sync de CRM/fechamento de conversa sem telefone real capturado.
+  const telefoneCapturado =
+    parsed.telefoneCapturado && parsed.telefoneCapturado !== 'null' ? parsed.telefoneCapturado : undefined;
+
   return {
     acao: parsed.acao as TriageDecision['acao'],
     mensagem: parsed.mensagem,
     sectorId: parsed.sectorId ?? undefined,
     eLead: parsed.eLead,
-    telefoneCapturado: parsed.telefoneCapturado ?? undefined,
+    telefoneCapturado,
   };
 }
