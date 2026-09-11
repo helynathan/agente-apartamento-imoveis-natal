@@ -56,7 +56,7 @@
     },
     {
       "parameters": {
-        "jsCode": "function extractShortcode(url) {\n  if (!url) return null;\n  const match = String(url).match(/\\/(?:p|reel|tv)\\/([^/?]+)/);\n  return match ? match[1] : null;\n}\n\nconst targetShortcode = extractShortcode($('Webhook').item.json.body.postUrl);\nconst media = ($input.first().json.data || []).find((m) => extractShortcode(m.permalink) === targetShortcode);\n\nif (!media || !targetShortcode) {\n  return [{ json: { error: 'not_found' } }];\n}\n\nreturn [{ json: { mediaId: media.id } }];\n"
+        "jsCode": "function extractShortcode(url) {\n  if (!url) return null;\n  const match = String(url).match(/\\/(?:p|reel|reels|tv)\\/([^/?]+)/);\n  return match ? match[1] : null;\n}\n\nconst targetShortcode = extractShortcode($('Webhook').item.json.body.postUrl);\nconst media = ($input.first().json.data || []).find((m) => extractShortcode(m.permalink) === targetShortcode);\n\nif (!media || !targetShortcode) {\n  return [{ json: { error: 'not_found' } }];\n}\n\nreturn [{ json: { mediaId: media.id } }];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
