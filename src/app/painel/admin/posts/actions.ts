@@ -7,7 +7,7 @@ import { resolvePostUrl } from '@/lib/instagram/resolvePostUrl';
 import { extractPdfText } from '@/lib/pdf/extractPdfText';
 import { upsertPostListing, deletePostListing } from '@/lib/posts/postListingRepository';
 
-const MAX_PDF_SIZE_BYTES = 10 * 1024 * 1024;
+const MAX_PDF_SIZE_BYTES = 20 * 1024 * 1024;
 
 export async function createPostListingAction(formData: FormData): Promise<void> {
   const session = await getServerSession(authOptions);
@@ -28,7 +28,7 @@ export async function createPostListingAction(formData: FormData): Promise<void>
     throw new Error('O arquivo precisa ser um PDF.');
   }
   if (file.size > MAX_PDF_SIZE_BYTES) {
-    throw new Error('O PDF não pode passar de 10MB.');
+    throw new Error('O PDF não pode passar de 20MB.');
   }
 
   const { mediaId } = await resolvePostUrl(postUrl);
