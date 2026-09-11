@@ -68,20 +68,4 @@ describe('parseInstagramWebhook', () => {
     expect(result?.profilePictureUrl).toBeUndefined();
   });
 
-  it('parses originMediaId when present', () => {
-    const result = parseInstagramWebhook({
-      senderId: 'ig-user-1',
-      messageId: 'IGM123',
-      content: 'Olá',
-      originMediaId: '17841409145832360_123',
-    });
-
-    expect(result?.originMediaId).toBe('17841409145832360_123');
-  });
-
-  it('leaves originMediaId undefined when absent', () => {
-    const result = parseInstagramWebhook({ senderId: 'ig-user-1', messageId: 'IGM123', content: 'Olá' });
-
-    expect(result?.originMediaId).toBeUndefined();
-  });
 });

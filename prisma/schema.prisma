@@ -135,3 +135,10 @@ model PostListing {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
+
+model PendingCommentContext {
+  id          String   @id @default(cuid())
+  commenterId String   @unique
+  mediaId     String
+  createdAt   DateTime @default(now())
+}

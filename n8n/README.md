@@ -55,15 +55,24 @@ mesmo endpoint que `webhook-in-instagram` usa pra mensagens normais, antes de re
 
 Um admin vincula um PDF a um post específico na tela `/painel/admin/posts`
 do Next.js. Quando alguém comenta nesse post, o node `Parse Evento
-Comentario` de `webhook-in-instagram.json` guarda `{mediaId, timestamp}`
-por `commenterId` na memória do workflow (`$getWorkflowStaticData('global')`,
-chave `postContextByCommenter`), expirando entradas com mais de 7 dias. Se
-essa pessoa responder a DM aberta pelo comentário, `Parse Evento Instagram`
-resgata esse vínculo e inclui `originMediaId` no payload mandado pro
-Next.js — que grava esse valor na conversa (só na criação, nunca depois) e
-usa o texto do PDF vinculado como contexto extra pra IA em todo turno da
-conversa.
+Comentario` de `webhook-in-instagram.json` extrai `{commenterId, mediaId}`
+e o node `Salvar Contexto do Post` grava esse vínculo no Next.js, via
+`POST /api/webhook/instagram-comment/{secret}` — persistido na tabela
+`PendingCommentContext` do banco do Next.js, com expiração de 7 dias. Se
+essa pessoa responder a DM aberta pelo comentário, a própria rota
+`/api/webhook/instagram/{secret}` consulta esse vínculo (por `commenterId`)
+e grava o `mediaId` como `originMediaId` na conversa (só na criação, nunca
+depois) — que passa a usar o texto do PDF vinculado como contexto extra pra
+IA em todo turno da conversa.
+
+**Por que não fica na memória do workflow do n8n (histórico):** a primeira
+versão guardava esse vínculo em `$getWorkflowStaticData('global')`. Na
+prática essa escrita nunca foi persistida pelo n8n (confirmado direto no
+banco: a chave `global` simplesmente não aparecia no `staticData` salvo do
+workflow) — o vínculo comentário→post nunca chegava a funcionar. Mover essa
+memória pro banco do Next.js (que já é a fonte confiável de dados da
+aplicação) resolveu de vez.
 
 Limitação aceita: se a mesma pessoa comentar em posts diferentes antes de
 responder a alguma DM, o vínculo mais recente sobrescreve o anterior (a
-memória é por `commenterId`, não por comentário específico).
+tabela guarda 1 linha por `commenterId`, não por comentário específico).

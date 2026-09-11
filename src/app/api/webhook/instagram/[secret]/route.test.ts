@@ -12,11 +12,15 @@ vi.mock('@/lib/ai/processInboundForAi', () => ({
 vi.mock('@/lib/queue/enqueueOutboundMessage', () => ({
   enqueueOutboundMessage: vi.fn().mockResolvedValue({ id: 'om1' }),
 }));
+vi.mock('@/lib/posts/pendingCommentContextRepository', () => ({
+  findRecentMediaIdForCommenter: vi.fn().mockResolvedValue(null),
+}));
 
 import { POST } from '@/app/api/webhook/instagram/[secret]/route';
 import { persistInboundMessage } from '@/lib/conversations/persistInboundMessage';
 import { processInboundForAi } from '@/lib/ai/processInboundForAi';
 import { enqueueOutboundMessage } from '@/lib/queue/enqueueOutboundMessage';
+import { findRecentMediaIdForCommenter } from '@/lib/posts/pendingCommentContextRepository';
 
 function makeRequest(body: unknown, rawBody?: string) {
   return new Request('http://localhost/api/webhook/instagram/correct-secret', {
@@ -133,14 +137,16 @@ describe('POST /api/webhook/instagram/[secret]', () => {
     );
   });
 
-  it('passes originMediaId through to persistInboundMessage when present', async () => {
+  it('passes originMediaId through to persistInboundMessage when a pending comment context matches', async () => {
+    vi.mocked(findRecentMediaIdForCommenter).mockResolvedValueOnce('media-abc');
+
     await callWithSecret('correct-secret', {
       senderId: 'ig-user-1',
       messageId: 'IGM123',
       content: 'Olá',
-      originMediaId: 'media-abc',
     });
 
+    expect(findRecentMediaIdForCommenter).toHaveBeenCalledWith('ig-user-1');
     expect(persistInboundMessage).toHaveBeenCalledWith(
       expect.objectContaining({ originMediaId: 'media-abc' })
     );
