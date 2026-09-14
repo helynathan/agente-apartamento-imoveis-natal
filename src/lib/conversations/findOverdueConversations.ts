@@ -1,5 +1,4 @@
 import { db } from '@/lib/db';
-import { businessMinutesSince } from '@/lib/conversations/businessHours';
 
 export async function findOverdueConversations(
   now: Date,
@@ -22,6 +21,6 @@ export async function findOverdueConversations(
 
   return candidates
     .filter((c) => !c.lastOutboundAt || c.lastOutboundAt < c.lastInboundAt!)
-    .filter((c) => businessMinutesSince(c.lastInboundAt as Date, now) >= slaMinutes)
+    .filter((c) => (now.getTime() - (c.lastInboundAt as Date).getTime()) / 60_000 >= slaMinutes)
     .map((c) => ({ id: c.id, customerName: c.customerName, customerExternalId: c.customerExternalId }));
 }

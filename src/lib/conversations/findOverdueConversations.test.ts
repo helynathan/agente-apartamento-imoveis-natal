@@ -87,6 +87,19 @@ describe('findOverdueConversations', () => {
     expect(overdue).toHaveLength(0);
   });
 
+  it('includes a conversation overdue on a Sunday (SLA counts real elapsed time, not just business hours)', async () => {
+    // Sunday 2026-09-13, 10:00 UTC -> now = 10:20 UTC: 20 minutes elapsed on the wall clock
+    const lastInboundAt = new Date(Date.UTC(2026, 8, 13, 10, 0, 0));
+    const now = new Date(Date.UTC(2026, 8, 13, 10, 20, 0));
+    const conversation = await db.conversation.create({
+      data: { customerExternalId: '5511999999999', customerName: 'Cliente de domingo', status: 'QUEUED', lastInboundAt },
+    });
+
+    const overdue = await findOverdueConversations(now, 15);
+
+    expect(overdue.map((c) => c.id)).toContain(conversation.id);
+  });
+
   it('includes an AI_HANDLING conversation past the threshold (status just needs to not be CLOSED)', async () => {
     const lastInboundAt = new Date(Date.UTC(2026, 8, 7, 13, 0, 0));
     const now = new Date(Date.UTC(2026, 8, 7, 13, 30, 0));
