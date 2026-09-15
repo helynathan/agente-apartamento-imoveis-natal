@@ -34,17 +34,32 @@ describe('findOverdueConversations', () => {
     expect(overdue).toHaveLength(0);
   });
 
-  it('excludes a conversation whose last outbound reply is newer than the last inbound message', async () => {
+  it('excludes an AI_HANDLING conversation whose last outbound reply is newer than the last inbound message', async () => {
     const lastInboundAt = new Date(Date.UTC(2026, 8, 7, 13, 0, 0));
-    const lastOutboundAt = new Date(Date.UTC(2026, 8, 7, 13, 5, 0)); // replied after the inbound message
+    const lastOutboundAt = new Date(Date.UTC(2026, 8, 7, 13, 5, 0)); // AI already replied after the inbound message
     const now = new Date(Date.UTC(2026, 8, 7, 13, 30, 0));
     await db.conversation.create({
-      data: { customerExternalId: '5511999999999', status: 'QUEUED', lastInboundAt, lastOutboundAt },
+      data: { customerExternalId: '5511999999999', status: 'AI_HANDLING', lastInboundAt, lastOutboundAt },
     });
 
     const overdue = await findOverdueConversations(now, 15);
 
     expect(overdue).toHaveLength(0);
+  });
+
+  it('includes a QUEUED conversation even when the last outbound was the AI handoff message', async () => {
+    // Mirrors a real incident: the AI's last message ("encaminhando pro setor comercial") lands
+    // after the customer's last message, but the customer is still waiting for a human in the queue.
+    const lastInboundAt = new Date(Date.UTC(2026, 8, 7, 13, 0, 0));
+    const lastOutboundAt = new Date(Date.UTC(2026, 8, 7, 13, 5, 0));
+    const now = new Date(Date.UTC(2026, 8, 7, 13, 30, 0));
+    const conversation = await db.conversation.create({
+      data: { customerExternalId: '5511999999999', status: 'QUEUED', lastInboundAt, lastOutboundAt },
+    });
+
+    const overdue = await findOverdueConversations(now, 15);
+
+    expect(overdue.map((c) => c.id)).toContain(conversation.id);
   });
 
   it('excludes a CLOSED conversation even if it looks overdue', async () => {

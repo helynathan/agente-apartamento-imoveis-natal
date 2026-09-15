@@ -14,13 +14,14 @@ export async function findOverdueConversations(
       id: true,
       customerName: true,
       customerExternalId: true,
+      status: true,
       lastInboundAt: true,
       lastOutboundAt: true,
     },
   });
 
   return candidates
-    .filter((c) => !c.lastOutboundAt || c.lastOutboundAt < c.lastInboundAt!)
+    .filter((c) => c.status === 'QUEUED' || !c.lastOutboundAt || c.lastOutboundAt < c.lastInboundAt!)
     .filter((c) => (now.getTime() - (c.lastInboundAt as Date).getTime()) / 60_000 >= slaMinutes)
     .map((c) => ({ id: c.id, customerName: c.customerName, customerExternalId: c.customerExternalId }));
 }
